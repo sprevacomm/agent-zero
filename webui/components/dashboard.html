@@ -1,0 +1,166 @@
+<!-- Agent Zero Dashboard Component -->
+<div class="dashboard-container" x-data="dashboard()">
+    <!-- System Status Cards -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon">🤖</div>
+            <div class="stat-content">
+                <div class="stat-number" x-text="stats.totalMessages"></div>
+                <div class="stat-label">Total Messages</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-content">
+                <div class="stat-number" x-text="stats.activeTasks"></div>
+                <div class="stat-label">Active Tasks</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">💾</div>
+            <div class="stat-content">
+                <div class="stat-number" x-text="formatBytes(stats.memoryUsage)"></div>
+                <div class="stat-label">Memory Used</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-content">
+                <div class="stat-number" x-text="stats.uptime"></div>
+                <div class="stat-label">Uptime</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="dashboard-section">
+        <h3>Recent Activity</h3>
+        <div class="activity-feed">
+            <template x-for="activity in recentActivity" :key="activity.id">
+                <div class="activity-item">
+                    <div class="activity-icon" x-text="activity.icon"></div>
+                    <div class="activity-content">
+                        <div class="activity-title" x-text="activity.title"></div>
+                        <div class="activity-time" x-text="formatTime(activity.timestamp)"></div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="dashboard-section">
+        <h3>Quick Actions</h3>
+        <div class="quick-actions">
+            <button class="quick-action-btn" @click="quickNewChat()">
+                <span class="action-icon">💬</span>
+                <span>New Chat</span>
+            </button>
+            <button class="quick-action-btn" @click="quickNewTask()">
+                <span class="action-icon">📋</span>
+                <span>New Task</span>
+            </button>
+            <button class="quick-action-btn" @click="quickSettings()">
+                <span class="action-icon">⚙️</span>
+                <span>Settings</span>
+            </button>
+            <button class="quick-action-btn" @click="quickFileUpload()">
+                <span class="action-icon">📁</span>
+                <span>Upload File</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="dashboard-section">
+        <h3>System Health</h3>
+        <div class="health-indicators">
+            <div class="health-item">
+                <div class="health-label">API Status</div>
+                <div class="health-status" :class="{'status-online': stats.apiStatus, 'status-offline': !stats.apiStatus}">
+                    <span x-text="stats.apiStatus ? 'Online' : 'Offline'"></span>
+                </div>
+            </div>
+            <div class="health-item">
+                <div class="health-label">Database</div>
+                <div class="health-status status-online">
+                    <span>Connected</span>
+                </div>
+            </div>
+            <div class="health-item">
+                <div class="health-label">MCP Services</div>
+                <div class="health-status" :class="{'status-online': stats.mcpStatus, 'status-offline': !stats.mcpStatus}">
+                    <span x-text="stats.mcpStatus ? 'Active' : 'Inactive'"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function dashboard() {
+    return {
+        stats: {
+            totalMessages: 0,
+            activeTasks: 0,
+            memoryUsage: 0,
+            uptime: '0h 0m',
+            apiStatus: true,
+            mcpStatus: true
+        },
+        recentActivity: [],
+        
+        init() {
+            this.loadDashboardData();
+            // Refresh every 30 seconds
+            setInterval(() => this.loadDashboardData(), 30000);
+        },
+        
+        async loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard-stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    this.stats = { ...this.stats, ...data.stats };
+                    this.recentActivity = data.recentActivity || [];
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+            }
+        },
+        
+        formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        },
+        
+        formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString();
+        },
+        
+        quickNewChat() {
+            newChat();
+        },
+        
+        quickNewTask() {
+            // Switch to tasks tab
+            document.getElementById('tasks-tab').click();
+        },
+        
+        quickSettings() {
+            settingsModalProxy.openModal();
+        },
+        
+        quickFileUpload() {
+            // Trigger file upload
+            document.getElementById('file-input')?.click();
+        }
+    }
+}
+</script> 

@@ -1,0 +1,351 @@
+<!-- Enhanced Chat Interface Component -->
+<div class="enhanced-chat-container" x-data="enhancedChat()">
+    <!-- Chat Header with Context Info -->
+    <div class="chat-header">
+        <div class="chat-title">
+            <span x-text="currentChatTitle || 'New Chat'"></span>
+            <div class="chat-meta">
+                <span class="message-count">
+                    <i class="fas fa-comment"></i>
+                    <span x-text="messageCount"></span> messages
+                </span>
+                <span class="token-count" x-show="tokenCount > 0">
+                    <i class="fas fa-coins"></i>
+                    <span x-text="formatNumber(tokenCount)"></span> tokens
+                </span>
+            </div>
+        </div>
+        <div class="chat-actions">
+            <button class="action-btn" @click="exportChat()" title="Export Chat">
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="action-btn" @click="summarizeChat()" title="Summarize Chat">
+                <i class="fas fa-compress-alt"></i>
+            </button>
+            <button class="action-btn" @click="shareChat()" title="Share Chat">
+                <i class="fas fa-share"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Enhanced Message List -->
+    <div class="enhanced-messages" id="enhanced-messages-container">
+        <template x-for="message in messages" :key="message.id">
+            <div class="enhanced-message" :class="'message-' + message.type">
+                <!-- Message Header -->
+                <div class="message-header">
+                    <div class="message-avatar" :class="'avatar-' + message.type">
+                        <i :class="getMessageIcon(message.type)"></i>
+                    </div>
+                    <div class="message-meta">
+                        <span class="message-sender" x-text="message.sender || message.type"></span>
+                        <span class="message-time" x-text="formatTime(message.timestamp)"></span>
+                        <span class="message-tokens" x-show="message.tokens" x-text="message.tokens + ' tokens'"></span>
+                    </div>
+                    <div class="message-actions">
+                        <button class="msg-action-btn" @click="copyMessage(message)" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="msg-action-btn" @click="regenerateMessage(message)" title="Regenerate" x-show="message.type === 'assistant'">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="msg-action-btn" @click="editMessage(message)" title="Edit" x-show="message.type === 'user'">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Message Content -->
+                <div class="message-content">
+                    <!-- Text Content -->
+                    <div class="message-text" x-show="message.content">
+                        <div x-html="renderMarkdown(message.content)"></div>
+                    </div>
+
+                    <!-- Code Blocks with Enhanced Features -->
+                    <template x-for="codeBlock in message.codeBlocks" :key="codeBlock.id">
+                        <div class="enhanced-code-block">
+                            <div class="code-header">
+                                <span class="code-language" x-text="codeBlock.language"></span>
+                                <div class="code-actions">
+                                    <button @click="copyCode(codeBlock.code)" title="Copy Code">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button @click="runCode(codeBlock)" title="Run Code" x-show="codeBlock.executable">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <pre><code class="code-content" x-text="codeBlock.code"></code></pre>
+                        </div>
+                    </template>
+
+                    <!-- File Attachments -->
+                    <div class="message-attachments" x-show="message.attachments && message.attachments.length > 0">
+                        <template x-for="attachment in message.attachments" :key="attachment.id">
+                            <div class="attachment-item">
+                                <i :class="getFileIcon(attachment.type)"></i>
+                                <span x-text="attachment.name"></span>
+                                <button @click="downloadAttachment(attachment)" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Progress Indicator for Streaming -->
+                    <div class="message-progress" x-show="message.streaming">
+                        <div class="typing-indicator">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Feedback -->
+                <div class="message-feedback" x-show="message.type === 'assistant'">
+                    <button class="feedback-btn" :class="{'active': message.feedback === 'positive'}" @click="giveFeedback(message, 'positive')">
+                        <i class="fas fa-thumbs-up"></i>
+                    </button>
+                    <button class="feedback-btn" :class="{'active': message.feedback === 'negative'}" @click="giveFeedback(message, 'negative')">
+                        <i class="fas fa-thumbs-down"></i>
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Smart Suggestions -->
+        <div class="smart-suggestions" x-show="suggestions.length > 0">
+            <div class="suggestions-header">💡 Suggested actions:</div>
+            <div class="suggestions-list">
+                <template x-for="suggestion in suggestions" :key="suggestion.id">
+                    <button class="suggestion-chip" @click="applySuggestion(suggestion)">
+                        <span x-text="suggestion.text"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Input Area -->
+    <div class="enhanced-input-area">
+        <!-- Context Pills -->
+        <div class="context-pills" x-show="activeContexts.length > 0">
+            <template x-for="context in activeContexts" :key="context.id">
+                <span class="context-pill">
+                    <i :class="context.icon"></i>
+                    <span x-text="context.name"></span>
+                    <button @click="removeContext(context)" class="remove-context">×</button>
+                </span>
+            </template>
+        </div>
+
+        <!-- Input Row -->
+        <div class="input-row">
+            <div class="input-attachments">
+                <button class="attach-btn" @click="attachFile()" title="Attach File">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <button class="attach-btn" @click="attachImage()" title="Attach Image">
+                    <i class="fas fa-image"></i>
+                </button>
+                <button class="attach-btn" @click="recordVoice()" title="Voice Message" :class="{'recording': isRecording}">
+                    <i class="fas fa-microphone"></i>
+                </button>
+            </div>
+
+            <div class="input-wrapper">
+                <textarea 
+                    x-model="inputText"
+                    @keydown="handleKeydown($event)"
+                    @input="handleInput"
+                    placeholder="Type your message... (Shift+Enter for new line)"
+                    rows="1"
+                    class="enhanced-input"
+                    :disabled="isProcessing">
+                </textarea>
+                <div class="input-footer">
+                    <div class="char-count">
+                        <span x-text="inputText.length"></span> chars
+                        <span x-show="estimatedTokens > 0"> · ~<span x-text="estimatedTokens"></span> tokens</span>
+                    </div>
+                    <div class="input-actions">
+                        <button class="input-action-btn" @click="clearInput()" title="Clear" x-show="inputText.length > 0">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button class="input-action-btn" @click="addTemplate()" title="Templates">
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="send-btn" 
+                    @click="sendMessage()" 
+                    :disabled="!canSend" 
+                    :class="{'processing': isProcessing}">
+                <i class="fas fa-paper-plane" x-show="!isProcessing"></i>
+                <i class="fas fa-spinner fa-spin" x-show="isProcessing"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function enhancedChat() {
+    return {
+        messages: [],
+        inputText: '',
+        isProcessing: false,
+        isRecording: false,
+        messageCount: 0,
+        tokenCount: 0,
+        currentChatTitle: '',
+        suggestions: [],
+        activeContexts: [],
+        estimatedTokens: 0,
+        
+        get canSend() {
+            return this.inputText.trim().length > 0 && !this.isProcessing;
+        },
+        
+        init() {
+            this.loadMessages();
+            // Auto-resize textarea
+            this.$watch('inputText', () => {
+                this.estimateTokens();
+                this.autoResizeTextarea();
+            });
+        },
+        
+        loadMessages() {
+            // Load existing messages from the current chat
+            // This would integrate with existing message loading logic
+        },
+        
+        sendMessage() {
+            if (!this.canSend) return;
+            
+            const message = {
+                id: Date.now(),
+                type: 'user',
+                content: this.inputText,
+                timestamp: Date.now(),
+                attachments: []
+            };
+            
+            this.messages.push(message);
+            this.inputText = '';
+            this.isProcessing = true;
+            
+            // Integration with existing send logic
+            window.sendMessage && window.sendMessage(message.content);
+        },
+        
+        handleKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                this.sendMessage();
+            }
+        },
+        
+        handleInput() {
+            this.generateSuggestions();
+        },
+        
+        autoResizeTextarea() {
+            this.$nextTick(() => {
+                const textarea = this.$el.querySelector('.enhanced-input');
+                if (textarea) {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                }
+            });
+        },
+        
+        estimateTokens() {
+            // Rough estimation: ~4 characters per token
+            this.estimatedTokens = Math.ceil(this.inputText.length / 4);
+        },
+        
+        generateSuggestions() {
+            // Smart suggestions based on context
+            if (this.inputText.toLowerCase().includes('code')) {
+                this.suggestions = [
+                    { id: 1, text: 'Write a Python script', action: 'code_python' },
+                    { id: 2, text: 'Debug this code', action: 'debug' },
+                    { id: 3, text: 'Explain the code', action: 'explain' }
+                ];
+            } else if (this.inputText.toLowerCase().includes('analyze')) {
+                this.suggestions = [
+                    { id: 1, text: 'Create a data visualization', action: 'visualize' },
+                    { id: 2, text: 'Generate a report', action: 'report' },
+                    { id: 3, text: 'Find patterns', action: 'patterns' }
+                ];
+            } else {
+                this.suggestions = [];
+            }
+        },
+        
+        // Message actions
+        copyMessage(message) {
+            navigator.clipboard.writeText(message.content);
+            this.showToast('Message copied!');
+        },
+        
+        regenerateMessage(message) {
+            // Implementation for regenerating assistant responses
+        },
+        
+        editMessage(message) {
+            this.inputText = message.content;
+            // Remove the message or mark it for editing
+        },
+        
+        giveFeedback(message, type) {
+            message.feedback = message.feedback === type ? null : type;
+            // Send feedback to backend for learning
+        },
+        
+        // Utility functions
+        formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString();
+        },
+        
+        formatNumber(num) {
+            return num.toLocaleString();
+        },
+        
+        getMessageIcon(type) {
+            const icons = {
+                'user': 'fas fa-user',
+                'assistant': 'fas fa-robot',
+                'system': 'fas fa-cog',
+                'tool': 'fas fa-wrench',
+                'error': 'fas fa-exclamation-triangle'
+            };
+            return icons[type] || 'fas fa-comment';
+        },
+        
+        getFileIcon(type) {
+            const icons = {
+                'image': 'fas fa-image',
+                'pdf': 'fas fa-file-pdf',
+                'text': 'fas fa-file-text',
+                'code': 'fas fa-file-code'
+            };
+            return icons[type] || 'fas fa-file';
+        },
+        
+        renderMarkdown(content) {
+            // Integration with existing markdown rendering
+            return window.renderMarkdown ? window.renderMarkdown(content) : content;
+        },
+        
+        showToast(message) {
+            window.toast && window.toast(message, 'success');
+        }
+    }
+}
+</script> 

@@ -1168,10 +1168,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup tabs functionality
 function setupTabs() {
+    const dashboardTab = document.getElementById('dashboard-tab');
     const chatsTab = document.getElementById('chats-tab');
     const tasksTab = document.getElementById('tasks-tab');
 
-    if (chatsTab && tasksTab) {
+    if (dashboardTab && chatsTab && tasksTab) {
+        dashboardTab.addEventListener('click', function() {
+            activateTab('dashboard');
+        });
+
         chatsTab.addEventListener('click', function() {
             activateTab('chats');
         });
@@ -1186,8 +1191,10 @@ function setupTabs() {
 }
 
 function activateTab(tabName) {
+    const dashboardTab = document.getElementById('dashboard-tab');
     const chatsTab = document.getElementById('chats-tab');
     const tasksTab = document.getElementById('tasks-tab');
+    const dashboardSection = document.getElementById('dashboard-section');
     const chatsSection = document.getElementById('chats-section');
     const tasksSection = document.getElementById('tasks-section');
 
@@ -1203,8 +1210,10 @@ function activateTab(tabName) {
     }
 
     // Reset all tabs and sections
+    dashboardTab.classList.remove('active');
     chatsTab.classList.remove('active');
     tasksTab.classList.remove('active');
+    dashboardSection.style.display = 'none';
     chatsSection.style.display = 'none';
     tasksSection.style.display = 'none';
 
@@ -1212,7 +1221,11 @@ function activateTab(tabName) {
     localStorage.setItem('activeTab', tabName);
 
     // Activate selected tab and section
-    if (tabName === 'chats') {
+    if (tabName === 'dashboard') {
+        dashboardTab.classList.add('active');
+        dashboardSection.style.display = '';
+        // No context switching needed for dashboard
+    } else if (tabName === 'chats') {
         chatsTab.classList.add('active');
         chatsSection.style.display = '';
 
@@ -1269,7 +1282,7 @@ function initializeActiveTab() {
         localStorage.setItem('lastSelectedTask', '');
     }
 
-    const activeTab = localStorage.getItem('activeTab') || 'chats';
+    const activeTab = localStorage.getItem('activeTab') || 'dashboard';
     activateTab(activeTab);
 }
 

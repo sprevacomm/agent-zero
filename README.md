@@ -5,8 +5,10 @@
 
 [![Agent Zero Website](https://img.shields.io/badge/Website-agent--zero.ai-0A192F?style=for-the-badge&logo=vercel&logoColor=white)](https://agent-zero.ai) [![Thanks to Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-Thanks%20to%20Sponsors-FF69B4?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/frdel) [![Follow on X](https://img.shields.io/badge/X-Follow-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/Agent0ai) [![Join our Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/B8KZKNsPpj) [![Subscribe on YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@AgentZeroFW) [![Connect on LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jan-tomasek/) [![Follow on Warpcast](https://img.shields.io/badge/Warpcast-Follow-5A32F3?style=for-the-badge)](https://warpcast.com/agent-zero)
 
+[Quick Start](#-quick-start) •
 [Introduction](#a-personal-organic-agentic-framework-that-grows-and-learns-with-you) •
 [Installation](./docs/installation.md) •
+[Local Development](#️-local-development-setup) •
 [Hacking Edition](#hacking-edition) •
 [How to update](./docs/installation.md#how-to-update-agent-zero) •
 [Documentation](./docs/README.md) •
@@ -27,7 +29,62 @@
 
 [![Showcase](/docs/res/showcase-thumb.png)](https://youtu.be/lazLNcEYsiQ)
 
+## ⚡ Quick Start
 
+Get Agent Zero running in under 2 minutes with our custom Docker image:
+
+### 🐳 **Option 1: One-Command Start**
+```bash
+docker run -d -p 50001:80 --name agent-zero devopsone808/agent-zero-custom:latest
+```
+
+### 🗂️ **Option 2: With Data Persistence**
+```bash
+# Create data directory for persistence
+mkdir agent-zero-data
+
+# Run with volume mount to keep your data
+docker run -d -p 50001:80 \
+  -v "$(pwd)/agent-zero-data:/a0" \
+  --name agent-zero \
+  devopsone808/agent-zero-custom:latest
+```
+
+### 🚀 **Option 3: Use Our Convenience Script**
+```bash
+# Clone this repository
+git clone https://github.com/your-username/agent-zero.git
+cd agent-zero
+
+# Make script executable and run
+chmod +x run_custom.sh
+./run_custom.sh
+```
+*The convenience script automatically pulls the latest image, creates data directory, and starts Agent Zero with proper configuration.*
+
+### 🌐 **Access Agent Zero**
+1. Open your browser and navigate to: **http://localhost:50001**
+2. Configure your API keys in Settings (⚙️ icon)
+3. Start chatting with your AI agent!
+
+### 📋 **What You Get**
+- ✅ **Web UI** - Clean, interactive interface
+- ✅ **Code Execution** - Python, Node.js, terminal commands
+- ✅ **Web Browsing** - Search and browse the internet
+- ✅ **Memory System** - Persistent learning and recall
+- ✅ **Multi-Agent** - Spawn subordinate agents for complex tasks
+- ✅ **Speech Support** - Text-to-speech and speech-to-text
+- ✅ **File Operations** - Read, write, and manipulate files
+
+> **🔑 Note:** You'll need API keys for your preferred LLM provider (OpenAI, Anthropic, etc.) to get started. Configure these in the Settings page after launch.
+
+### 🔧 **Quick Troubleshooting**
+- **Port already in use?** Try: `docker stop agent-zero && docker rm agent-zero` then run again
+- **Container won't start?** Check Docker is running: `docker ps`
+- **Can't access web UI?** Verify the container is running: `docker logs agent-zero`
+- **Need to update?** Pull latest image: `docker pull devopsone808/agent-zero-custom:latest`
+
+---
 
 ## A personal, organic agentic framework that grows and learns with you
 
@@ -112,8 +169,8 @@ A detailed setup guide for Windows, macOS, and Linux with a video can be found i
 ```bash
 # Pull and run with Docker
 
-docker pull frdel/agent-zero-run
-docker run -p 50001:80 frdel/agent-zero-run
+docker pull devopsone808/agent-zero-custom
+docker run -p 50001:80 devopsone808/agent-zero-custom
 
 # Visit http://localhost:50001 to start
 ```
@@ -132,6 +189,50 @@ docker run -p 50001:80 frdel/agent-zero-run
 - Agent output is streamed in real-time, allowing users to read along and intervene at any time.
 - No coding is required; only prompting and communication skills are necessary.
 - With a solid system prompt, the framework is reliable even with small models, including precise tool usage.
+
+## 🛠️ Local Development Setup
+
+If you want to contribute to Agent Zero or work with the code locally (to eliminate linter errors), follow these steps:
+
+### **📦 Virtual Environment Setup**
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/agent-zero.git
+cd agent-zero
+
+# Create a virtual environment
+python3 -m venv agent-zero-dev
+
+# Activate the virtual environment
+# On Linux/macOS:
+source agent-zero-dev/bin/activate
+
+# On Windows:
+# agent-zero-dev\Scripts\activate
+
+# Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### **🔧 IDE Configuration**
+
+After setting up the virtual environment:
+
+1. **VS Code/Cursor**: 
+   - Press `Cmd/Ctrl + Shift + P`
+   - Type "Python: Select Interpreter"
+   - Choose `./agent-zero-dev/bin/python`
+
+2. **PyCharm**: Go to Settings → Project → Python Interpreter → Add Interpreter → Existing Environment
+
+### **⚠️ Note About Dependencies**
+
+The linter errors you might see in `agent.py` and other files (like `Import "langchain_core" could not be resolved`) occur because:
+- Dependencies are installed in the Docker container (production environment)
+- Your local environment may not have them installed (development environment)
+- Installing them locally resolves linter errors for a better development experience
 
 ## 👀 Keep in Mind
 
@@ -156,7 +257,6 @@ docker run -p 50001:80 frdel/agent-zero-run
 
 ## Coming soon
 
-- **MCP**
 - **Knowledge and RAG Tools**
 
 ## 🎯 Changelog

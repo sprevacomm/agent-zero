@@ -90,8 +90,8 @@ A detailed setup guide for Windows, macOS, and Linux with a video can be found i
 ```bash
 # Pull and run with Docker
 
-docker pull frdel/agent-zero-run
-docker run -p 50001:80 frdel/agent-zero-run
+docker pull devopsone808/agent-zero-custom
+docker run -p 50001:80 devopsone808/agent-zero-custom
 
 # Visit http://localhost:50001 to start
 ```

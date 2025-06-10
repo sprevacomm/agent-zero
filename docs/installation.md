@@ -61,7 +61,7 @@ The following user guide provides instructions for installing and running Agent 
 - Note: Agent Zero also offers a Hacking Edition based on Kali linux with modified prompts for cybersecurity tasks. The setup is the same as the regular version, just use the frdel/agent-zero-run:hacking image instead of frdel/agent-zero-run.
 
 2.1. Pull the Agent Zero Docker image:
-- Search for `frdel/agent-zero-run` in Docker Desktop
+- Search for `devopsone808/agent-zero-custom` in Docker Desktop
 - Click the `Pull` button
 - The image will be downloaded to your machine in a few minutes
 
@@ -71,7 +71,7 @@ The following user guide provides instructions for installing and running Agent 
 > Alternatively, run the following command in your terminal:
 >
 > ```bash
-> docker pull frdel/agent-zero-run
+> docker pull devopsone808/agent-zero-custom
 > ```
 
 2.2. Create a data directory for persistence:
@@ -92,7 +92,7 @@ The following user guide provides instructions for installing and running Agent 
 
 2.3. Run the container:
 - In Docker Desktop, go back to the "Images" tab
-- Click the `Run` button next to the `frdel/agent-zero-run` image
+- Click the `Run` button next to the `devopsone808/agent-zero-custom` image
 - Open the "Optional settings" menu
 - Set the port to `0` in the second "Host port" field (for automatic port assignment)
 
@@ -108,10 +108,10 @@ Optionally you can map local folders for file persistence:
 
 ![docker containers](res/setup/4-docker-container-started.png)
 
-> [!TIP]
+ > [!TIP]
 > Alternatively, run the following command in your terminal:
 > ```bash
-> docker run -p $PORT:80 -v /path/to/your/data:/a0 frdel/agent-zero-run
+> docker run -p $PORT:80 -v /path/to/your/data:/a0 devopsone808/agent-zero-custom
 > ```
 > - Replace `$PORT` with the port you want to use (e.g., `50080`)
 > - Replace `/path/to/your/data` with your chosen directory path

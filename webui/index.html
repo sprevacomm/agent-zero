@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="css/history.css">
     <link rel="stylesheet" href="css/scheduler-datepicker.css">
     <link rel="stylesheet" href="css/tunnel.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -173,6 +174,7 @@
                 <!-- Tabs container -->
                 <div class="tabs-container">
                     <div class="tabs">
+                        <div class="tab" id="dashboard-tab">Dashboard</div>
                         <div class="tab active" id="chats-tab">Chats</div>
                         <div class="tab" id="tasks-tab">Tasks</div>
                     </div>
@@ -253,6 +255,85 @@
                         </ul>
                         <div class="empty-list-message" x-show="tasks.length === 0">
                             <p><i>No tasks to list.</i></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Section -->
+                <div class="config-section" id="dashboard-section" style="display: none;">
+                    <!-- Agent Zero Dashboard Component -->
+                    <div class="dashboard-container" x-data="dashboard()">
+                        <!-- System Status Cards -->
+                        <div class="dashboard-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon">🤖</div>
+                                <div class="stat-content">
+                                    <div class="stat-number" x-text="stats.totalMessages"></div>
+                                    <div class="stat-label">Messages</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">⚡</div>
+                                <div class="stat-content">
+                                    <div class="stat-number" x-text="stats.activeTasks"></div>
+                                    <div class="stat-label">Tasks</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">💾</div>
+                                <div class="stat-content">
+                                    <div class="stat-number" x-text="formatBytes(stats.memoryUsage)"></div>
+                                    <div class="stat-label">Memory</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">🔄</div>
+                                <div class="stat-content">
+                                    <div class="stat-number" x-text="stats.uptime"></div>
+                                    <div class="stat-label">Uptime</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Health -->
+                        <div class="dashboard-section">
+                            <h3>System Health</h3>
+                            <div class="health-indicators">
+                                <div class="health-item">
+                                    <div class="health-label">API Status</div>
+                                    <div class="health-status" :class="{'status-online': stats.apiStatus, 'status-offline': !stats.apiStatus}">
+                                        <span x-text="stats.apiStatus ? 'Online' : 'Offline'"></span>
+                                    </div>
+                                </div>
+                                <div class="health-item">
+                                    <div class="health-label">MCP Services</div>
+                                    <div class="health-status" :class="{'status-online': stats.mcpStatus, 'status-offline': !stats.mcpStatus}">
+                                        <span x-text="stats.mcpStatus ? 'Active' : 'Inactive'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="dashboard-section">
+                            <h3>Quick Actions</h3>
+                            <div class="quick-actions">
+                                <button class="quick-action-btn" @click="quickNewChat()">
+                                    <span class="action-icon">💬</span>
+                                    <span>New Chat</span>
+                                </button>
+                                <button class="quick-action-btn" @click="quickNewTask()">
+                                    <span class="action-icon">📋</span>
+                                    <span>New Task</span>
+                                </button>
+                                <button class="quick-action-btn" @click="quickSettings()">
+                                    <span class="action-icon">⚙️</span>
+                                    <span>Settings</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1682,6 +1763,60 @@
         <div class="dragdrop-text">Drop files to attach them to your message</div>
         <div class="dragdrop-subtext"></div>
     </div>
+
+    <script>
+    // Dashboard functionality
+    function dashboard() {
+        return {
+            stats: {
+                totalMessages: 0,
+                activeTasks: 0,
+                memoryUsage: 0,
+                uptime: '0h 0m',
+                apiStatus: true,
+                mcpStatus: true
+            },
+            
+            init() {
+                this.loadDashboardData();
+                // Refresh every 30 seconds
+                setInterval(() => this.loadDashboardData(), 30000);
+            },
+            
+            async loadDashboardData() {
+                try {
+                    const response = await fetch('/dashboard_stats');
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.stats = { ...this.stats, ...data.stats };
+                    }
+                } catch (error) {
+                    console.error('Failed to load dashboard data:', error);
+                }
+            },
+            
+            formatBytes(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            },
+            
+            quickNewChat() {
+                newChat();
+            },
+            
+            quickNewTask() {
+                document.getElementById('tasks-tab').click();
+            },
+            
+            quickSettings() {
+                settingsModalProxy.openModal();
+            }
+        }
+    }
+    </script>
 
 </body>
 
